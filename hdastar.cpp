@@ -12,6 +12,10 @@ int HDAstar::Process::insert(const vector<Node> &insertList) {
     return pq.size();
 }
 
+size_t HDAstar::Process::size() {
+    return pq.size();
+}
+
 vector<Node> HDAstar::Process::run() {
     vector<Node> ret;
     if(pq.empty()) 
@@ -55,19 +59,24 @@ vector<Distance> HDAstar::run(const Graph &g, int startPos, int goalPos) {
         vector<vector<Node>> insertLists(processNum);
         for(auto& proc : procs) {
             vector<Node> buf = proc.run();
-            for(const Node& node : buf) {
+            for(const Node& node : buf) 
                 insertLists[hashFunc(node.id)].push_back(node);
-            }
         }
 
         bool existInsetNode = false;
         for(int i = 0; processNum > i; i++) {
             existInsetNode |= !insertLists.empty();
             procs[i].insert(insertLists[i]);
+
+            stats.pqSizeLog.push_back(procs[i].size());
         }
 
         if(!existInsetNode) break;
     }
 
     return gvalues;
+}
+
+HDAstar::Stats HDAstar::getStats() const {
+    return stats;
 }

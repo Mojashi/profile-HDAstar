@@ -29,6 +29,10 @@ class HDAstar {
     function<Distance(int)> heuristicFunc;
     int processNum;
 
+    struct Stats {
+        vector<size_t> pqSizeLog;
+    } stats;
+
     class Process {
         priority_queue<Node, vector<Node>, greater<Node>> pq;
         function<Distance(int)> heuristicFunc;
@@ -39,10 +43,12 @@ class HDAstar {
         Process(){}
         Process(vector<Distance>* gvalues,const Graph* g, function<Distance(int)> heuristicFunc);
         int insert(const vector<Node>& insertList); //returns current heap size
+        size_t size();
         vector<Node> run();
     };
 
 public:
     HDAstar(int processNum, function<int(int)> hashFunc, function<Distance(int)> heuristicFunc);
     vector<Distance> run(const Graph& g, int startPos, int goalPos);
+    Stats getStats() const;
 };
