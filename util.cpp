@@ -51,9 +51,7 @@ ostream& operator<<(ostream& os, const GridGraph& g) {
     return os;
 }
 
-const vector<pair<int,int>> neighbors = {{-1,-1}, {-1,0}, {-1, 1}, {0,-1}, {0,1}, {1,-1}, {1,0}, {1,1}};
-
-bool connected(const GridGraph& g, int fromY, int fromX, int toY, int toX) {
+bool connected(const GridGraph& g, int fromY, int fromX, int toY, int toX, const vector<pair<int, int>>& neighbors) {
     if(g.empty() || g[0].empty()) return {};
     int height = g.size();
     int width = g[0].size();
@@ -73,7 +71,7 @@ bool connected(const GridGraph& g, int fromY, int fromX, int toY, int toX) {
 }
 
 //0がスタート、height*width-1がゴール
-GridGraph generateRandomGridMaze(int height, int width, float obstacleRatio) {
+GridGraph generateRandomGridMaze(int height, int width, float obstacleRatio, const vector<pair<int, int>>& neighbors) {
     random_device seed_gen;
     mt19937 engine(seed_gen());
     uniform_real_distribution<float> dist;
@@ -88,13 +86,13 @@ GridGraph generateRandomGridMaze(int height, int width, float obstacleRatio) {
         obstacle[0][0] = false;
         obstacle[height - 1][width - 1] = false;
 
-        if(connected(obstacle, 0, 0, height-1, width-1))
+        if(connected(obstacle, 0, 0, height-1, width-1, neighbors))
             return obstacle;
         // cerr << "failed to generate maze..." << endl;
     }
 }
 
-Graph gridToGraph(const GridGraph& g) {
+Graph gridToGraph(const GridGraph& g, const vector<pair<int, int>>& neighbors) {
     if(g.empty() || g[0].empty()) return {};
 
     int height = g.size();

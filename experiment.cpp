@@ -5,6 +5,7 @@
 #include <utility>
 #include <ostream>
 #include <array>
+#include <cassert>
 #include <algorithm>
 #include <fstream>
 #include "hdastar.hpp"
@@ -12,7 +13,7 @@
 using namespace std;
 
 struct Result {
-    int processNum, height, width, obstacleRatio;
+    int processNum, height, width, obstacleRatio, neighborsNum;
     array<int,100> PQSizePercentile;
 
     string toJSON() {
@@ -21,7 +22,8 @@ struct Result {
         + "\"processNum\": " + to_string(processNum) + ","
         + "\"height\": " + to_string(height) + ","
         + "\"width\": " + to_string(width) + ","
-        + "\"obstacleRatio\": " + to_string(obstacleRatio) + ",";
+        + "\"obstacleRatio\": " + to_string(obstacleRatio) + ","
+        + "\"neighborsNum\": " + to_string(neighborsNum) + ",";
         ret += "\"PQSizePercentile\": [";
         for(int i = 0; PQSizePercentile.size() > i; i++) {
             ret += to_string(PQSizePercentile[i]);
@@ -58,8 +60,10 @@ array<int,100> summarizePQSize(const HDAstar& hdastar) {
     return ret;
 }
 
-Result test(int processNum, int height, int width, int obstacleRatio){
-    GridGraph grid = generateRandomGridMaze(height, width, obstacleRatio / 100.0);
+Result test(int processNum, int height, int width, int obstacleRatio, int neighborsNum){
+    assert(neighborsNum == 4 || neighborsNum == 8);
+    const auto neighbors = neighborsNum == 8 ? neighbors8 : neighbors4; 
+    GridGraph grid = generateRandomGridMaze(height, width, obstacleRatio / 100.0, neighbors);
 
     HDAstar hdastar(
         processNum, 
@@ -71,12 +75,12 @@ Result test(int processNum, int height, int width, int obstacleRatio){
         }
     );
     const vector<Distance> dist = hdastar.run(
-        gridToGraph(grid),
+        gridToGraph(grid, neighbors8),
         0, height * width - 1
     );
 
     return Result {
-        processNum, height, width, obstacleRatio,
+        processNum, height, width, obstacleRatio, neighborsNum,
         summarizePQSize(hdastar)
     };
 }
@@ -94,9 +98,9 @@ vector<string> split(const string &s, string delim) {
 }
 
 int main(int argc, const char** argv) {
-    if(argc < 7) {
-        cerr << "Usage: " << argv[0] << " [output filename] [TryTimes] [MinProcessNum-MaxProcessNum-Step] [MinHeight-MaxHeight-Step] [MinWidth-MaxWidth-Step] [MinObstacle(in Percent)-MaxObstacle(in Percent)-Step]" << endl;
-        cerr << "Example: " << argv[0] << " out.log 5 3-3-1 1-100-2 1-50-2 10-70-5" << endl;
+    if(argc < 8) {
+        cerr << "Usage: " << argv[0] << " [output filename] [TryTimes] [neighborsNum(4 or 8)] [MinProcessNum-MaxProcessNum-Step] [MinHeight-MaxHeight-Step] [MinWidth-MaxWidth-Step] [MinObstacle(in Percent)-MaxObstacle(in Percent)-Step]" << endl;
+        cerr << "Example: " << argv[0] << " out.log 5 8 3-3-1 1-100-2 1-50-2 10-70-5" << endl;
         return 1;
     }
 
@@ -108,11 +112,16 @@ int main(int argc, const char** argv) {
     }
 
     int tryTimes = stoi(argv[2]);
+    int neighborsNum = stoi(argv[3]);
+    if(neighborsNum != 4 && neighborsNum != 8) {
+        cerr << "neighborsNum must be 4 or 8" << endl;
+        return 1;
+    }
 
     const int dimension = 4;
     array<array<int, 3>, dimension> args;
     for(int i = 0; dimension > i; i++) {
-        auto buf = split(argv[i + 3], "-");
+        auto buf = split(argv[i + 4], "-");
         if(buf.size() != args[0].size()) {
             cerr << "invalid input format" << endl;
             return 1;
@@ -140,27 +149,28 @@ int main(int argc, const char** argv) {
     int MaxObstacle = args[3][1];
     int ObstacleStep = args[3][2];
 
-    ofs << "[";
+    ofs << "{\"conditions\": \"";
+    for(int i = 1; 8 > i; i++) {
+        ofs << argv[i] << " ";
+    }
+    ofs << "\", \"results\": [\n";
     bool havePrev = false;
     for (int processNum = MinProcessNum; MaxProcessNum >= processNum; processNum += ProcessNumStep)
         for (int height = MinHeight; MaxHeight >= height; height += HeightStep)
             for (int width = MinWidth; MaxWidth >= width; width += WidthStep)
-                for (int obstacle = MinObstacle; MaxObstacle >= obstacle; obstacle += ObstacleStep){
-                    vector<Result> results;
-                    results.reserve(tryTimes);
+                    for (int obstacle = MinObstacle; MaxObstacle >= obstacle; obstacle += ObstacleStep)
+                        for (int i = 0; tryTimes > i; i++) {
+                            printf("TEST>> processNum:%d height:%d width:%d obstacle:%d%% neighborsNum:%d iter:%d\n", processNum, height, width, obstacle, neighborsNum, i);
+                            Result result = test(processNum, height, width, obstacle, neighborsNum);
 
-                    for (int i = 0; tryTimes > i; i++) {
-                        printf("TEST>> processNum:%d height:%d width:%d obstacle:%d%% iter:%d\n", processNum, height, width, obstacle, i);
-                        results.push_back(test(processNum, height, width, obstacle));
-                    }
+                            if (havePrev)
+                                ofs << "," << endl;
+                            havePrev = true;
+                            ofs << result.toJSON();
+                            ofs.flush();
+                        }
 
-                    if (havePrev)
-                        ofs << "," << endl;
-                    havePrev = true;
-                    ofs << averageResults(results).toJSON();
-                    ofs.flush();
-                }
-    ofs << "]";
+    ofs << "]}";
 
     ofs.close();
     cout << "test finished" << endl;

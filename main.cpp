@@ -29,10 +29,10 @@ int main(int argc, const char** argv) {
         }
     );
     
-    GridGraph grid = generateRandomGridMaze(height, width, obstacleRatio);
+    GridGraph grid = generateRandomGridMaze(height, width, obstacleRatio, neighbors8);
     cout << grid << endl;
     const vector<Distance> dist = hdastar.run(
-        gridToGraph(grid),
+        gridToGraph(grid, neighbors8),
         0, height * width - 1
     );
 

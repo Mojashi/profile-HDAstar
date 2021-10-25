@@ -9,5 +9,8 @@
 
 typedef vector<vector<bool>> GridGraph;
 ostream& operator<<(ostream& os, const GridGraph& g);
-Graph gridToGraph(const GridGraph& g);
-GridGraph generateRandomGridMaze(int height, int width, float obstacleRatio);
+Graph gridToGraph(const GridGraph& g, const vector<pair<int, int>>& neighbors);
+GridGraph generateRandomGridMaze(int height, int width, float obstacleRatio, const vector<pair<int, int>>& neighbors);
+
+const vector<pair<int, int>> neighbors8 = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
+const vector<pair<int, int>> neighbors4 = {{-1, 0}, {0, -1}, {0, 1}, {1, 0}};

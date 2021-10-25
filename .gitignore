@@ -1,3 +1,5 @@
 main
 exp
 out.json
+out-no-obstacles.json
+results/*
