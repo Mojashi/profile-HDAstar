@@ -31,6 +31,7 @@ class HDAstar {
 
     struct Stats {
         vector<size_t> pqSizeLog;
+        int iterNum = 0;
     } stats;
 
     class Process {

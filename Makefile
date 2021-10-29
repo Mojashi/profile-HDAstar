@@ -5,7 +5,7 @@ main: main.cpp $(SRCS) $(HEADERS)
 	g++ main.cpp $(SRCS) -g -o $@ 
 
 exp: experiment.cpp $(SRCS) $(HEADERS)
-	g++ experiment.cpp $(SRCS) -g -o $@  -O3
+	g++ experiment.cpp $(SRCS) -o $@  -O3
 
 .PHONY: clean
 clean: 

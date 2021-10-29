@@ -51,6 +51,14 @@ ostream& operator<<(ostream& os, const GridGraph& g) {
     return os;
 }
 
+int toID(int y, int x, int width, int height) {
+    return y * width + x;
+}
+
+pair<int,int> fromID(int id, int width, int height) {
+    return {id / width, id % width};
+}
+
 bool connected(const GridGraph& g, int fromY, int fromX, int toY, int toX, const vector<pair<int, int>>& neighbors) {
     if(g.empty() || g[0].empty()) return {};
     int height = g.size();
@@ -65,7 +73,7 @@ bool connected(const GridGraph& g, int fromY, int fromX, int toY, int toX, const
                     int y = i + v.first;
                     int x = j + v.second;
                     if (y >= 0 && y < height && x >= 0 && x < width && !g[y][x])
-                        ds.merge(i * width + j, y * width + x);
+                        ds.merge(toID(i, j, width, height),toID(y, x, width, height));
                 }
     return ds.same(fromY*width + fromX, toY*width + toX);
 }
@@ -106,8 +114,8 @@ Graph gridToGraph(const GridGraph& g, const vector<pair<int, int>>& neighbors) {
                 int y = i + v.first;
                 int x = j + v.second;
                 if(y >= 0 && y < height && x >= 0 && x < width && !g[y][x]) 
-                    ret[i * width + j].push_back({
-                        i * width + j, y * width + x, 1
+                    ret[toID(i, j, width, height)].push_back({
+                        toID(i, j, width, height), toID(y, x, width, height), 1
                     });
             }
 

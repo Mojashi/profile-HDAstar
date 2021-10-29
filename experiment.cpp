@@ -15,6 +15,7 @@ using namespace std;
 struct Result {
     int processNum, height, width, obstacleRatio, neighborsNum;
     array<int,100> PQSizePercentile;
+    int iterNum;
 
     string toJSON() {
         string ret;
@@ -24,6 +25,7 @@ struct Result {
         + "\"width\": " + to_string(width) + ","
         + "\"obstacleRatio\": " + to_string(obstacleRatio) + ","
         + "\"neighborsNum\": " + to_string(neighborsNum) + ",";
+        ret += "\"iterNum\": " + to_string(iterNum) + ",";
         ret += "\"PQSizePercentile\": [";
         for(int i = 0; PQSizePercentile.size() > i; i++) {
             ret += to_string(PQSizePercentile[i]);
@@ -69,19 +71,20 @@ Result test(int processNum, int height, int width, int obstacleRatio, int neighb
         processNum, 
         [processNum](int nodeID){return nodeID%processNum;},
         [processNum,height,width](int nodeID){
-            int y = nodeID / width;
-            int x = nodeID % width;
+            auto tmp = fromID(nodeID, width, height);
+            int y = tmp.first, x = tmp.second;
             return abs(y - (height - 1)) + abs(x - (width - 1));
         }
     );
     const vector<Distance> dist = hdastar.run(
-        gridToGraph(grid, neighbors8),
-        0, height * width - 1
+        gridToGraph(grid, neighbors),
+        toID(0, 0, width, height), toID(height - 1, width - 1, width, height)
     );
 
     return Result {
         processNum, height, width, obstacleRatio, neighborsNum,
-        summarizePQSize(hdastar)
+        summarizePQSize(hdastar),
+        hdastar.getStats().iterNum
     };
 }
 

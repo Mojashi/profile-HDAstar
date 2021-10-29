@@ -14,3 +14,5 @@ GridGraph generateRandomGridMaze(int height, int width, float obstacleRatio, con
 
 const vector<pair<int, int>> neighbors8 = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
 const vector<pair<int, int>> neighbors4 = {{-1, 0}, {0, -1}, {0, 1}, {1, 0}};
+int toID(int y, int x, int width, int height);
+pair<int,int> fromID(int id, int width, int height);

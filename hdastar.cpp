@@ -70,6 +70,7 @@ vector<Distance> HDAstar::run(const Graph &g, int startPos, int goalPos) {
 
             stats.pqSizeLog.push_back(procs[i].size());
         }
+        stats.iterNum++;
 
         if(!existInsetNode) break;
     }
