@@ -13,7 +13,8 @@
 using namespace std;
 
 struct Result {
-    int processNum, height, width, obstacleRatio, neighborsNum;
+    int processNum, height, width, neighborsNum;
+    float obstacleRatio;
     array<int,100> PQSizePercentile;
     int iterNum;
 
@@ -62,14 +63,24 @@ array<int,100> summarizePQSize(const HDAstar& hdastar) {
     return ret;
 }
 
-Result test(int processNum, int height, int width, int obstacleRatio, int neighborsNum){
+#include <random>
+Result test(int processNum, int height, int width, int obstacleRatio, int neighborsNum) {
     assert(neighborsNum == 4 || neighborsNum == 8);
     const auto neighbors = neighborsNum == 8 ? neighbors8 : neighbors4; 
     GridGraph grid = generateRandomGridMaze(height, width, obstacleRatio / 100.0, neighbors);
 
+
+    auto modHashFunc = [processNum](int nodeID){return nodeID%processNum;};
+    vector<int> randomTable(height*width);
+    for(int i = 0; height*width - 1 > i; i++) {randomTable[i]=rand();}
+
+    auto superModHashFunc = [randomTable, processNum](int x){
+        return randomTable[x]%processNum;
+    };
+
     HDAstar hdastar(
         processNum, 
-        [processNum](int nodeID){return nodeID%processNum;},
+        superModHashFunc,
         [processNum,height,width](int nodeID){
             auto tmp = fromID(nodeID, width, height);
             int y = tmp.first, x = tmp.second;
@@ -82,7 +93,7 @@ Result test(int processNum, int height, int width, int obstacleRatio, int neighb
     );
 
     return Result {
-        processNum, height, width, obstacleRatio, neighborsNum,
+        processNum, height, width, neighborsNum,calcObstacleRatio(grid),
         summarizePQSize(hdastar),
         hdastar.getStats().iterNum
     };

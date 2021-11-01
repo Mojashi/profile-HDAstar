@@ -121,3 +121,14 @@ Graph gridToGraph(const GridGraph& g, const vector<pair<int, int>>& neighbors) {
 
     return ret;
 }
+
+float calcObstacleRatio(const GridGraph& g) {
+    int cou = 0, w = 0,h = g.size();
+    for(int i = 0; g.size() > i; i++){
+        for(int j = 0; g[i].size() > j; j++){
+            cou += g[i][j];
+        }
+        w = g[i].size();
+    }
+    return cou *1.0/ (w*h);
+}
